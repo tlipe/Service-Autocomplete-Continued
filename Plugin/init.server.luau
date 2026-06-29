@@ -1,3 +1,6 @@
+--!optimize 2
+--!native
+
 local ScriptEditorService = game:GetService("ScriptEditorService")
 
 const Lexer = require(script.lexer)
