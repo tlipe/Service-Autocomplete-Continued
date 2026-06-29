@@ -26,6 +26,8 @@
 		- operator
 --]=]
 
+const lang = require(script.language)
+
 local lexer = {}
 
 const Prefix, Suffix, Cleaner = "^[%c%s]*", "[%c%s]*", "[%c%s]+"
@@ -48,7 +50,6 @@ const COMMENT_MULTI_INCOMP = "%-%-%[=*%[.-.*"
 const COMMENT_PLAIN = "%-%-.-\n"
 const COMMENT_INCOMP = "%-%-.*"
 
-const lang = require(script.language)
 const lua_keyword = lang.keyword
 const lua_builtin = lang.builtin
 const lua_libraries = lang.libraries
