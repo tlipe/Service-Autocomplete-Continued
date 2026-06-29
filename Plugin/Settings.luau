@@ -1,10 +1,10 @@
-local SETTING_KEY = "ServiceAutoComplete"
+--!optimize 2
+const Setting_key = "ServiceAutoComplete"
 
 local Settings = {}
-
 local plugin: Plugin
 
-local ServiceSortingTypes = {
+const ServiceSortingTypes = {
 	["Alphabetical"] = function(current, contender)
 		return current > contender
 	end,
@@ -17,7 +17,7 @@ local ServiceSortingTypes = {
 }
 
 function Settings:CompareServices(a, b)
-	local sortType = plugin:GetSetting(SETTING_KEY .. "_SortType")
+	local sortType = plugin:GetSetting(Setting_key .. "_SortType")
 	local sortFunction = ServiceSortingTypes[sortType] or ServiceSortingTypes["Alphabetical"]
 
 	return sortFunction(a, b)
@@ -40,7 +40,7 @@ end
 -- method to change sorting type exposed to the client
 local function setSortType(input, secondInput)
 	-- assume function was called using : operation
-	if type(input) == "table" then
+	if typeof(input) == "table" then
 		input = secondInput
 	end
 
@@ -59,7 +59,7 @@ local function setSortType(input, secondInput)
 		return "Couldn't find sort type"
 	end
 
-	plugin:SetSetting(SETTING_KEY .. "_SortType", newSortType)
+	plugin:SetSetting(Setting_key .. "_SortType", newSortType)
 	print("Set auto complete sort type to: " .. newSortType)
 
 	return newSortType
