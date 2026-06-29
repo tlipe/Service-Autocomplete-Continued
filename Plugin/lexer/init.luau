@@ -1,3 +1,4 @@
+--!native
 --[=[
 	Lexical scanner for creating a sequence of tokens from Lua source code.
 	This is a heavily modified and Roblox-optimized version of
@@ -27,43 +28,39 @@
 
 local lexer = {}
 
-local Prefix, Suffix, Cleaner = "^[%c%s]*", "[%c%s]*", "[%c%s]+"
-local UNICODE = "[%z\x01-\x7F\xC2-\xF4][\x80-\xBF]+"
-local NUMBER_A = "0[xX][%da-fA-F_]+"
-local NUMBER_B = "0[bB][01_]+"
-local NUMBER_C = "%d+%.?%d*[eE][%+%-]?%d+"
-local NUMBER_D = "%d+[%._]?[%d_eE]*"
-local OPERATORS = "[:;<>/~%*%(%)%-={},%.#%^%+%%]+"
-local BRACKETS = "[%[%]]+" -- needs to be separate pattern from other operators or it'll mess up multiline strings
-local IDEN = "[%a_][%w_]*"
-local STRING_EMPTY = "(['\"])%1" --Empty String
-local STRING_PLAIN = "(['\"])[^\n]-([^\\]%1)" --TODO: Handle escaping escapes
-local STRING_INCOMP_A = "(['\"]).-\n" --Incompleted String with next line
-local STRING_INCOMP_B = "(['\"])[^\n]*" --Incompleted String without next line
-local STRING_MULTI = "%[(=*)%[.-%]%1%]" --Multiline-String
-local STRING_MULTI_INCOMP = "%[=*%[.-.*" --Incompleted Multiline-String
-local COMMENT_MULTI = "%-%-%[(=*)%[.-%]%1%]" --Completed Multiline-Comment
-local COMMENT_MULTI_INCOMP = "%-%-%[=*%[.-.*" --Incompleted Multiline-Comment
-local COMMENT_PLAIN = "%-%-.-\n" --Completed Singleline-Comment
-local COMMENT_INCOMP = "%-%-.*" --Incompleted Singleline-Comment
--- local TYPED_VAR = ":%s*([%w%?%| \t]+%s*)" --Typed variable, parameter, function
+const Prefix, Suffix, Cleaner = "^[%c%s]*", "[%c%s]*", "[%c%s]+"
+const UNICODE = "[%z\x01-\x7F\xC2-\xF4][\x80-\xBF]+"
+const NUMBER_A = "0[xX][%da-fA-F_]+"
+const NUMBER_B = "0[bB][01_]+"
+const NUMBER_C = "%d+%.?%d*[eE][%+%-]?%d+"
+const NUMBER_D = "%d+[%._]?[%d_eE]*"
+const OPERATORS = "[:;<>/~%*%(%)%-={},%.#%^%+%%]+"
+const BRACKETS = "[%[%]]+"
+const IDEN = "[%a_][%w_]*"
+const STRING_EMPTY = "(['\"])%1"
+const STRING_PLAIN = "(['\"])[^\n]-([^\\]%1)"
+const STRING_INCOMP_A = "(['\"]).-\n"
+const STRING_INCOMP_B = "(['\"])[^\n]*"
+const STRING_MULTI = "%[(=*)%[.-%]%1%]"
+const STRING_MULTI_INCOMP = "%[=*%[.-.*"
+const COMMENT_MULTI = "%-%-%[(=*)%[.-%]%1%]"
+const COMMENT_MULTI_INCOMP = "%-%-%[=*%[.-.*"
+const COMMENT_PLAIN = "%-%-.-\n"
+const COMMENT_INCOMP = "%-%-.*"
 
-local lang = require(script.language)
-local lua_keyword = lang.keyword
-local lua_builtin = lang.builtin
-local lua_libraries = lang.libraries
+const lang = require(script.language)
+const lua_keyword = lang.keyword
+const lua_builtin = lang.builtin
+const lua_libraries = lang.libraries
 
-local lua_matches = {
-	-- Indentifiers
+const lua_matches = {
 	{ Prefix .. IDEN .. Suffix, "var" },
 
-	-- Numbers
 	{ Prefix .. NUMBER_A .. Suffix, "number" },
 	{ Prefix .. NUMBER_B .. Suffix, "number" },
 	{ Prefix .. NUMBER_C .. Suffix, "number" },
 	{ Prefix .. NUMBER_D .. Suffix, "number" },
 
-	-- Strings
 	{ Prefix .. STRING_EMPTY .. Suffix, "string" },
 	{ Prefix .. STRING_PLAIN .. Suffix, "string" },
 	{ Prefix .. STRING_INCOMP_A .. Suffix, "string" },
@@ -71,20 +68,16 @@ local lua_matches = {
 	{ Prefix .. STRING_MULTI .. Suffix, "string" },
 	{ Prefix .. STRING_MULTI_INCOMP .. Suffix, "string" },
 
-	-- Comments
 	{ Prefix .. COMMENT_MULTI .. Suffix, "comment" },
 	{ Prefix .. COMMENT_MULTI_INCOMP .. Suffix, "comment" },
 	{ Prefix .. COMMENT_PLAIN .. Suffix, "comment" },
 	{ Prefix .. COMMENT_INCOMP .. Suffix, "comment" },
 
-	-- Operators
 	{ Prefix .. OPERATORS .. Suffix, "operator" },
 	{ Prefix .. BRACKETS .. Suffix, "operator" },
 
-	-- Unicode
 	{ Prefix .. UNICODE .. Suffix, "iden" },
 
-	-- Unknown
 	{ "^.", "iden" },
 }
 
@@ -101,7 +94,7 @@ function lexer.scan(s: string)
 
 	return function()
 		if index <= sz then
-			for _, m in ipairs(lua_matches) do
+			for _, m in lua_matches do
 				local i1, i2 = string.find(s, m[1], index)
 				if i1 then
 					local tok = string.sub(s, i1, i2)
