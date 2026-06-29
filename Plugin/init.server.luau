@@ -1,14 +1,15 @@
 local ScriptEditorService = game:GetService("ScriptEditorService")
 
-local Lexer = require(script.lexer)
-local Settings = require(script.Settings)(plugin)
+const Lexer = require(script.lexer)
+const Settings = require(script.Settings)(plugin)
 
 local ServiceNames = {}
 
-local PROCESS_NAME = "Service Autocomplete by Baileyeatspizza"
-local LEARN_MORE_LINK = "https://create.roblox.com/docs/reference/engine/classes/"
-local SERVICE_DEF = 'local %s = game:GetService("%s")\n'
-local CHECKED_GLOBAL_VARIABLES = {
+const Process_Name = "Service Autocomplete by Baileyeatspizza continued by O_Kolt"
+const Learn_More_Link = "https://create.roblox.com/docs/reference/engine/classes/"
+const Service_Def = 'const %s = game:GetService("%s")\n'
+
+const Checked_Global_Variables = {
 	print = Enum.CompletionItemKind.Function,
 	_G = Enum.CompletionItemKind.Variable,
 	_VERSION = Enum.CompletionItemKind.Variable,
@@ -64,14 +65,10 @@ type DocChanges = {
 }
 
 local function isService(instance)
-	-- avoid unnamed instances
 	if instance.Name == "Instance" then
 		return false
 	end
 
-	-- it shouldn't be possible to create another service
-	-- prevents highest level user made instances from appearing
-	-- new instance should be cleared by garbage collector
 	local success = pcall(function()
 		return instance.new(instance.ClassName)
 	end)
@@ -94,7 +91,6 @@ local function checkIfService(instance)
 	end
 end
 
--- used in a different function so it can return without ruining the callback
 local function addServiceAutocomplete(request: Request, response: Response)
 	local doc = request.textDocument.document
 
@@ -102,8 +98,6 @@ local function addServiceAutocomplete(request: Request, response: Response)
 	req = string.sub(req, 1, request.position.character - 1)
 
 	local requestedWord = string.match(req, "[%w]+$")
-
-	-- no text found
 	if not requestedWord then
 		return
 	end
@@ -117,11 +111,8 @@ local function addServiceAutocomplete(request: Request, response: Response)
 	end
 
 	for _, v in response.items do
-		-- already exists as an autofill
-		-- likely that its defined
 		if potentialMatches[v.label] then
-			-- append a leanMoreLink to the builtin one (this is embarassing LOL)
-			v.learnMoreLink = LEARN_MORE_LINK .. v.label
+			v.learnMoreLink = Learn_More_Link .. v.label
 			potentialMatches[v.label] = nil
 		end
 	end
@@ -130,7 +121,7 @@ local function addServiceAutocomplete(request: Request, response: Response)
 		local responseItem: ResponseItem = {
 			label = serviceName,
 			detail = "Get Service: " .. serviceName,
-			learnMoreLink = LEARN_MORE_LINK .. serviceName,
+			learnMoreLink = Learn_More_Link .. serviceName,
 		}
 
 		responseItem.textEdit = {
@@ -150,7 +141,6 @@ local function addServiceAutocomplete(request: Request, response: Response)
 		table.insert(response.items, responseItem)
 	end
 
-	-- don't update if theres no matches
 	if next(potentialMatches) == nil then
 		return
 	end
@@ -171,7 +161,6 @@ local function getFullScript(doc: ScriptDocument)
 		end
 
 		rawSource[line] = lineCode
-
 		lineCode ..= "\n"
 		fullScriptString ..= lineCode
 	end
@@ -180,6 +169,7 @@ local function getFullScript(doc: ScriptDocument)
 end
 
 local cachedTokens = {}
+
 local function getAllTokens(doc: ScriptDocument)
 	local fullScriptString, rawSource = getFullScript(doc)
 
@@ -390,7 +380,7 @@ local function processDocChanges(doc: ScriptDocument, change: DocChanges)
 		lineToComplete = 1
 	end
 
-	local serviceRequire = string.format(SERVICE_DEF, serviceName, serviceName)
+	local serviceRequire = string.format(Service_Def, serviceName, serviceName)
 	doc:EditTextAsync(serviceRequire, lineToComplete, 1, 0, 0)
 end
 
@@ -406,7 +396,7 @@ end
 
 local function updateResponse(request: Request, response: Response)
 	for _, v in response.items do
-		local expectedKind = CHECKED_GLOBAL_VARIABLES[v.label]
+		local expectedKind = Checked_Global_Variables[v.label]
 		if expectedKind then
 			if v.kind ~= expectedKind then
 				continue
@@ -433,8 +423,8 @@ local function completionRequested(request: Request, response: Response)
 end
 
 -- prevent potential overlap for some reason errors if one doesn't exist weird api choice but ok-
-pcall(ScriptEditorService.DeregisterAutocompleteCallback, ScriptEditorService, PROCESS_NAME)
-ScriptEditorService:RegisterAutocompleteCallback(PROCESS_NAME, 10, completionRequested)
+pcall(ScriptEditorService.DeregisterAutocompleteCallback, ScriptEditorService, Process_Name)
+ScriptEditorService:RegisterAutocompleteCallback(Process_Name, 10, completionRequested)
 
 -- roblox will throw an output error and tell the user to enable script injection in settings if this fails to connect
 ScriptEditorService.TextDocumentDidChange:Connect(onDocChanged)
@@ -446,5 +436,5 @@ for _, v in game:GetChildren() do
 end
 
 plugin.Unloading:Connect(function()
-	pcall(ScriptEditorService.DeregisterAutocompleteCallback, ScriptEditorService, PROCESS_NAME)
+	pcall(ScriptEditorService.DeregisterAutocompleteCallback, ScriptEditorService, Process_Name)
 end)
